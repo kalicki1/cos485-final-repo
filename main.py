@@ -13,6 +13,21 @@ from data_preprocess import sample_rate
 from model import Generator, Discriminator
 from utils import AudioDataset, emphasis
 
+import datetime
+
+TRAIN_LOSS_PATH = 'results/loss_train.txt'  # This can change during the lifetime of the program! see program below
+CHECKPOINT_PATH = 'results/checkpoints/'
+
+def uniquify(path):
+    filename, extension = os.path.splitext(path)
+    counter = 1
+
+    while os.path.exists(path):
+        path = filename + " (" + str(counter) + ")" + extension
+        counter += 1
+
+    return path
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train Audio Enhancement')
     parser.add_argument('--batch_size', default=50, type=int, help='train batch size')
@@ -44,6 +59,13 @@ if __name__ == '__main__':
     # optimizers
     g_optimizer = optim.RMSprop(generator.parameters(), lr=0.0001)
     d_optimizer = optim.RMSprop(discriminator.parameters(), lr=0.0001)
+
+    # Create file for saving training losses per epoch
+    while os.path.exists(TRAIN_LOSS_PATH):
+        TRAIN_LOSS_PATH = uniquify(TRAIN_LOSS_PATH)
+    print(f'{TRAIN_LOSS_PATH} has been created. Writing new data...')
+    with open(TRAIN_LOSS_PATH, 'w') as f:
+        f.write("Epoch\td_clean_loss\td_noisy_loss\tg_loss\tg_conditional_loss\ttimestamp\n")
 
     for epoch in range(NUM_EPOCHS):
         train_bar = tqdm(train_data_loader)
@@ -91,7 +113,38 @@ if __name__ == '__main__':
 
             train_bar.set_description(
                 'Epoch {}: d_clean_loss {:.4f}, d_noisy_loss {:.4f}, g_loss {:.4f}, g_conditional_loss {:.4f}'
-                    .format(epoch + 1, clean_loss.data[0], noisy_loss.data[0], g_loss.data[0], g_cond_loss.data[0]))
+                    .format(epoch + 1, clean_loss.data.item(), noisy_loss.data.item(), g_loss.data.item(), g_cond_loss.data.item()))
+            # train_bar.set_description(
+            #     'Epoch {}: d_clean_loss {:.4f}, d_noisy_loss {:.4f}, g_loss {:.4f}, g_conditional_loss {:.4f}'
+            #         .format(epoch + 1, clean_loss.data[0], noisy_loss.data[0], g_loss.data[0], g_cond_loss.data[0]))
+
+        # Record loss for current epoch
+        with open(TRAIN_LOSS_PATH, 'a') as f:
+            f.write('%s\t%s\t%s\t%s\t%s\t%s\n' % 
+                    (epoch + 1, 
+                    clean_loss.data.item(), 
+                    noisy_loss.data.item(), 
+                    g_loss.data.item(), 
+                    g_cond_loss.data.item(),
+                    datetime.datetime.now()))
+
+        # Save a model checkpoint after one epoch
+        # try:
+        #     print("Saving the {}^th checkpoint...".format(epoch))
+        #     torch.save({
+        #         'epoch': epoch,
+        #         'd_model_state_dict': Discriminator.state_dict(),
+        #         'g_model_state_dict': Generator.state_dict(),
+        #         'd_optimizer_state_dict': d_optimizer.state_dict(),
+        #         'g_optimizer_state_dict': g_optimizer.state_dict(),
+        #         'd_clean_loss': clean_loss,
+        #         'd_noisy_loss': noisy_loss,
+        #         'g_loss': g_loss,
+        #         'g_conditional_loss': g_cond_loss,
+        #         }, '{}checkpoint_epoch_{}.pt'.format(CHECKPOINT_PATH, epoch + 1))
+        #     print("Saved checkpoint successfully.")
+        # except Exception as e:
+        #     print("Failed to save the {}^th checkpoint! Error:\n{}\n".format(epoch, e))
 
         # TEST model
         test_bar = tqdm(test_data_loader, desc='Test model and save generated audios')
