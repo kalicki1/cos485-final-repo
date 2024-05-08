@@ -24,3 +24,6 @@ My evaluations:
 
 ```python evaluation.py --clean_folder '../results/baseline_clean/' --test_folder '../results/baseline_wiener_2' --log-file '../results/metrics_wiener_2.txt'```
 
+### Other
+
+Based on the leftthomas SEGAN PyTorch implementation. Modified for projects purposes. 
