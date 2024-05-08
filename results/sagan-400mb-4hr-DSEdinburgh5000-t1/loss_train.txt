@@ -1,0 +1,1 @@
+Epoch	d_clean_loss	d_noisy_loss	g_loss	g_conditional_loss	date	time

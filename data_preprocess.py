@@ -4,12 +4,12 @@ import librosa
 import numpy as np
 from tqdm import tqdm
 
-clean_train_folder = 'data/clean_trainset_56spk_wav'
-noisy_train_folder = 'data/noisy_trainset_56spk_wav'
-clean_test_folder = 'data/clean_testset_wav'
-noisy_test_folder = 'data/noisy_testset_wav'
-serialized_train_folder = 'data/serialized_train_data'
-serialized_test_folder = 'data/serialized_test_data'
+clean_train_folder = 'clean_trainset_56spk_wav'
+noisy_train_folder = 'noisy_trainset_56spk_wav'
+clean_test_folder = 'clean_testset_wav'
+noisy_test_folder = 'noisy_testset_wav'
+serialized_train_folder = 'serialized_train_data'
+serialized_test_folder = 'serialized_test_data'
 window_size = 2 ** 14  # about 1 second of samples
 sample_rate = 16000
 
@@ -81,6 +81,15 @@ def data_verify(data_type):
 
 
 if __name__ == '__main__':
+    pre = '../datasets/DS_10283_2791_subset/'
+
+    clean_train_folder = pre + clean_train_folder
+    noisy_train_folder = pre + noisy_train_folder
+    clean_test_folder = pre + clean_test_folder
+    noisy_test_folder = pre + noisy_test_folder
+    serialized_train_folder = pre + serialized_train_folder
+    serialized_test_folder = pre + serialized_test_folder
+
     process_and_serialize('train')
     data_verify('train')
     process_and_serialize('test')
